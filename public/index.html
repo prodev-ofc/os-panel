@@ -1,0 +1,34 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OS-PANEL v3 - Real Deployer</title>
+<style>*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}body{background:#050a14;color:#fff} .h{background:#001122;border-bottom:2px solid #00ffcc;padding:16px;display:flex;justify-content:space-between}.logo{font-weight:900;font-size:22px} .logo span{color:#00ffcc} .c{max-width:1200px;margin:20px auto;padding:0 15px;display:grid;grid-template-columns:1.2fr .8fr;gap:15px} .card{background:#0a1628;border:1px solid #123456;border-radius:12px;padding:18px;margin-bottom:15px} h3{color:#00ffcc;margin-bottom:10px} input,select{width:100%;padding:11px;border-radius:8px;border:1px solid #123456;background:#081020;color:#fff;margin:6px 0} button{width:100%;padding:12px;border-radius:8px;border:none;background:linear-gradient(90deg,#00ffcc,#0099ff);color:#000;font-weight:800;cursor:pointer;margin:6px 0} .bot{border:1px solid #1a3a5a;padding:10px;border-radius:8px;margin:8px 0} .st{float:right;padding:2px 8px;border-radius:10px;font-size:11px} .online{background:#00ff8822;color:#00ff88} .installing{background:#ffcc0022;color:#ffcc00} .offline{background:#ff444422;color:#ff4444} pre{background:#000;padding:8px;border-radius:6px;font-size:11px;max-height:150px;overflow:auto;margin-top:8px} @media(max-width:900px){.c{grid-template-columns:1fr}}</style>
+</head><body>
+<div class="h"><div class="logo">OS-<span>PANEL</span> v3.0</div><div style="background:#00ffcc;color:#000;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800">REAL DEPLOYER • prodev-ofc</div></div>
+<div class="c">
+<div>
+<div class="card"><h3>🚀 Deploy Any Bot 24/7</h3>
+<input id="botName" placeholder="Bot Name (e.g. HONOR-XMD)">
+<input id="session" placeholder="SESSION_ID - Required (e.g. HONOR~...)">
+<input id="repo" placeholder="GitHub Repo Link (e.g. https://github.com/prodev-ofc/HONOR-XMD) - Leave empty for HONOR-XMD">
+<input id="entry" placeholder="Bot Entry File (e.g. index.js, main.js, bot.js) - Default: index.js">
+<label style="font-size:12px;opacity:.7">OR Upload ZIP file:</label>
+<input type="file" id="zip" accept=".zip">
+<button onclick="deploy()">⚡ DEPLOY NOW - Auto Install & Run</button>
+<div id="res" style="font-size:13px;margin-top:10px"></div>
+</div>
+<div class="card"><h3>📦 Active Bots</h3><div id="bots">Loading...</div></div>
+</div>
+<div>
+<div class="card"><h3>⚡ How it Works</h3><p style="font-size:13px;opacity:.8;line-height:1.5">1. Paste SESSION_ID<br>2. Paste Repo OR upload ZIP<br>3. Panel will:<br>• git clone / unzip<br>• npm install<br>• Inject SESSION_ID<br>• node index.js<br>4. Bot stays ONLINE<br><br><b>For true 24/7:</b> Deploy this panel to Koyeb. Vercel will sleep.</p>
+<button onclick="window.open('https://app.koyeb.com/deploy?name=os-panel&repository=github.com/prodev-ofc/os-panel&type=git')">Deploy Panel to Koyeb for 24/7</button>
+</div>
+<div class="card"><h3>📊 Stats</h3><div id="stats"></div></div>
+</div>
+</div>
+<script>
+async function load(){let b=await (await fetch('/api/bots')).json(); document.getElementById('bots').innerHTML=b.length?b.map(x=>`<div class=bot><b>${x.name}</b> <span class="st ${x.status}">${x.status}</span><br><small>${x.repo} • ${x.entry}</small><br><small>${x.sessionId}</small><div><button onclick="logs('${x.id}')" style="width:auto;padding:4px 8px;font-size:11px;margin-top:5px">Logs</button> <button onclick="act('${x.id}','stop')" style="width:auto;padding:4px 8px;font-size:11px;background:#ffcc00">Stop</button> <button onclick="act('${x.id}','delete')" style="width:auto;padding:4px 8px;font-size:11px;background:#ff4444;color:#fff">Delete</button></div><pre id="log-${x.id}" style="display:none"></pre></div>`).join(''):'No bots yet'; document.getElementById('stats').innerHTML=`Total: ${b.length}<br>Online: ${b.filter(x=>x.status==='online').length}<br>Version: 3.0`;}
+async function deploy(){let fd=new FormData(); fd.append('botName',document.getElementById('botName').value); fd.append('sessionId',document.getElementById('session').value); fd.append('repoUrl',document.getElementById('repo').value); fd.append('botFile',document.getElementById('entry').value||'index.js'); let zf=document.getElementById('zip').files[0]; if(zf) fd.append('zipFile',zf); if(!fd.get('sessionId'))return alert('SESSION_ID required'); document.getElementById('res').innerHTML='⏳ Cloning / Unzipping & Installing...'; let r=await fetch('/api/deploy',{method:'POST',body:fd}); let d=await r.json(); if(d.error) document.getElementById('res').innerHTML='❌ '+d.error; else document.getElementById('res').innerHTML='✅ '+d.message; load();}
+async function logs(id){let el=document.getElementById('log-'+id); el.style.display=el.style.display==='none'?'block':'none'; let r=await fetch('/api/bots/'+id+'/logs'); let d=await r.json(); el.textContent=(d.logs||[]).join('\n').slice(-3000)||'No logs yet...';}
+async function act(id,action){await fetch('/api/bots/'+id+'/'+action,{method:'POST'}); load();}
+setInterval(load,4000); load();
+</script>
+</body></html>
